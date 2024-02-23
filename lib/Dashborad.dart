@@ -1,341 +1,532 @@
-import 'dart:async';
+import 'dart:ffi';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:first/Models/candidate.dart';
+import 'package:first/auth_controller.dart';
+import 'package:first/na.dart';
+import 'package:first/na_results_page.dart';
 import 'package:first/user_dash.dart';
-import 'package:flutter/gestures.dart';
+import 'package:first/voting_results.dart';
 import 'package:flutter/material.dart';
-import 'Profile_Page.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'SeeAll.dart';
-import '/res/lists.dart';
-import '/widgets/text_widget.dart' ;
+import '/widgets/text_widget.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final String? title;
+  const Home({super.key, this.title});
 
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  var opacity = 0.0;
-  bool position = false;
-  String selectedFeature = '';
-  int selectedPageIndex = 1;
+  int selectedPageIndex = 0;
+  String selectedFeature = "ONGOING";
+  bool position = true;
+  double opacity = 1;
+  late final List<Map<String, dynamic>> ppData;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    Future.delayed(Duration.zero, () {
-      animator();
+  bool isPPVoteCasted = false;
+  bool isNAVoteCasted = false;
 
+  void fetchVoteData() async {
+    //fetch data from firestore
+
+    await FirebaseFirestore.instance
+        .collection("PP")
+        .get()
+        .then((value) => {
+              for (var i in value.docs)
+                {
+                  // print(i.data()),
+                  ppData.add(i.data()),
+                },
+            })
+        .catchError((onError) {
+      print(onError);
+    });
+  }
+
+  var isElectionStarted = false;
+  bool applied = false;
+
+  String status = "new";
+
+  Future<void> updateKYCStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    applied = prefs.getBool("hasApplied") ?? false;
+    print("appled: $applied");
+
+    FirebaseFirestore.instance
+        .collection("Users")
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get()
+        .then((value) {
       setState(() {
-
+        status = value.get("status");
       });
     });
   }
-  animator() {
-    if (opacity == 1) {
-      opacity = 0;
-      position=false;
-    } else {
-      opacity = 1;
-      position=true;
-    }
-    setState(() {});
+
+  Future<void> checkElectionStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    isPPVoteCasted = prefs.getBool('isPPVoteCasted') ?? false;
+    isNAVoteCasted = prefs.getBool('isNAVoteCasted') ?? false;
+
+    await FirebaseFirestore.instance
+        .collection("settings")
+        .doc("2E19U8ygCkmLIocvaU0D")
+        .get()
+        .then((value) {
+      setState(() {
+        isElectionStarted = value.get("start_election");
+      });
+    });
   }
+
+  Future<void> storeNAResult(Map<String, dynamic> data) async {
+    try {
+      // Access Firestore instance
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      // Create a collection named "NA-Result"
+      CollectionReference naResultCollection =
+          firestore.collection('NA-Result');
+
+      // Create a document with id "NA#79"
+      DocumentReference naDocument = naResultCollection.doc('NA#79');
+
+      // Get candidates list and party list
+      List<String> candidates = data['Candidates'];
+      print(data['Candidates'].length);
+      List<String> party = data['Party'];
+
+      // Create documents for each candidate
+      for (int i = 0; i < candidates.length; i++) {
+        String candidateName = candidates[i];
+        String candidateParty = party[i];
+
+        // Create candidate document
+        await naDocument.collection('Candidates').doc(candidateName).set({
+          'vote_count': 0,
+          'party': candidateParty,
+          'NA#': 79,
+          'name': candidateName,
+        });
+      }
+
+      print('NA-Result data stored successfully!');
+    } catch (e) {
+      print('Error storing NA-Result data: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    updateKYCStatus();
+    checkElectionStatus();
+    ppData = [];
+
+    fetchVoteData();
+
+    // print("ppdta: $naData");
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.how_to_vote),
+            label: 'Vote',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_outlined),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: selectedPageIndex,
+        selectedItemColor: Colors.green,
+        onTap: (index) {
+          setState(() {
+            selectedPageIndex = index;
+          });
+          if (index == 0) {
+            // Navigate to Home.dart
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const Home(),
+              ),
+            );
+          } else if (index == 1) {
+            if (status != "approved") {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Your KYC is not approved yet.",
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+
+              return;
+            } else {
+              if (!isElectionStarted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Election not started yet.",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SeeAll(
+                      votingEnabled: isElectionStarted,
+                      isPPVoteCasted: isPPVoteCasted,
+                      isNAVoteCasted: isNAVoteCasted,
+                    ),
+                  ),
+                );
+              }
+            }
+            // Stay on this page (SeeAll.dart)
+          } else if (index == 2) {
+            // Navigate to Profile page
+            // You can replace 'ProfilePage()' with your actual profile page widget
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const UserDashboard(),
+              ),
+            );
+          }
+        },
+      ),
       body: SafeArea(
         child: Container(
           color: Colors.white,
-          padding: const EdgeInsets.only(top: 30, left: 0, right:0),
+          padding: const EdgeInsets.only(top: 30, left: 0, right: 0),
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
-          child: Stack(
-            children: [
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 400),
-                top: position ? 1 : 100,
-                right: 20,
-                left: 20,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 400),
-                  opacity: opacity,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextWidget("Hello", 17, Colors.black.withOpacity(.7),
-                              FontWeight.bold),
-                          TextWidget("Giovanny", 25, Colors.black, FontWeight.bold),
+                          TextWidget("Hello, there!", 14,
+                              Colors.black.withOpacity(.7), FontWeight.normal),
+                          TextWidget(widget.title ?? "Chain Vote", 25,
+                              Colors.black, FontWeight.bold),
                         ],
                       ),
-                      const Icon(Icons.phonelink_ring )
                     ],
                   ),
                 ),
-              ),
-              AnimatedPositioned(
-                top: position ? 80 : 140,
-                left: 20,
-                right: 20,
-                duration: const Duration(milliseconds: 400),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 400),
-                  opacity: opacity,
-                  child: Container(
-                    height: 50,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                          border: InputBorder.none,
-                          prefixIcon: Icon(
-                            Icons.search_sharp,
-                            size: 30,
-                            color: Colors.black.withOpacity(.5),
-                          ),
-                          hintText: "   Search"),
-                    ),
-                  ),
+                const SizedBox(
+                  height: 0,
                 ),
-              ),
-              featureButtonsRow(),
-
-              AnimatedPositioned(
-                  top: position ? 200 : 220,
-
-                  left: 20,
-                  right: 20, duration: const Duration(milliseconds: 400),
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: opacity,
-                    child: Container(
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                infoWidget(isElectionStarted),
+                const SizedBox(
+                  height: 15,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
                     children: [
-                      TextWidget("Candidates", 25, Colors.black.withOpacity(.8), FontWeight.bold,letterSpace: 0,),
-                      InkWell(
-                        onTap: () async
-                          {
-                            animator();
-                            setState(() {
-                            });
-                            // Timer(Duration(seconds: 1),() {
-                            //   Navigator.push(context, MaterialPageRoute(builder: (context) => SeeAll(),));
-                            //   animator();
-                            // },);
-                            await Future.delayed(const Duration(milliseconds: 500));
-                            await Navigator.push(context, MaterialPageRoute(builder:  (context) {
-                              return SeeAll();
-                            },));
-
-                            setState(() {
-                              animator();
-                            });
+                      Flexible(
+                        flex: 1,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!isElectionStarted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Election not started yet.",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            } else {
+                              Get.to(
+                                () => VotingResults(
+                                  ppData: ppData,
+                                ),
+                              );
+                            }
                           },
-                          child: TextWidget("See all", 15, Colors.blue.shade600.withOpacity(.8), FontWeight.bold,letterSpace: 0,)),
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            //height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: ListTile(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+
+                              //give the list tile a border radius
+
+                              //leading: const Icon(Icons.how_to_vote),
+                              title: const Text("Provincial Assembly"),
+                              subtitle: const Text("Check results."),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Flexible(
+                        flex: 1,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!isElectionStarted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Election not started yet.",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            } else {
+                              // Navigate to Voting.dart
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            // height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.orange[200],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+
+                                //give the list tile a border radius
+
+                                // leading: const Icon(Icons.verified),
+                                title: const Text("National Assembly"),
+                                subtitle: const Text("Check results."),
+                                onTap: () => Get.to(
+                                      () => const NaResultsPage(),
+                                    )),
+                          ),
+                        ),
+                      ),
                     ],
+                  ),
                 ),
-              ),
-                  )),
-              candidateList(),
-
-              // Bottom buttons
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 400),
-                  opacity: opacity,
-                  child: CurvedNavigationBar(
-                    backgroundColor: Colors.white,
-                    index: selectedPageIndex,
-                    items: [
-                      Icon(Icons.home_filled, color: selectedPageIndex == 0 ? Colors.green : Colors.black, size: 30),
-                      Icon(Icons.how_to_vote, color: selectedPageIndex == 1 ? Colors.green : Colors.black, size: 30),
-                      Icon(Icons.account_circle_outlined, color: selectedPageIndex == 2 ? Colors.green : Colors.black, size: 30),
+                const SizedBox(
+                  height: 20,
+                ),
+                Container(
+                  margin: const EdgeInsets.only(left: 20, right: 20),
+                  padding: EdgeInsets.all(20),
+                  //height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.how_to_vote,
+                            color: Colors.black,
+                          ),
+                          SizedBox(
+                            width: 7,
+                          ),
+                          Text(
+                            "Vote Status",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            " ⚫ Provincial Assembly",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          isPPVoteCasted
+                              ? Chip(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  side: BorderSide.none,
+                                  label: const Text(
+                                    "Voted",
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.green.withOpacity(.2),
+                                )
+                              : Chip(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  side: BorderSide.none,
+                                  label: const Text(
+                                    "Not Voted",
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.red.withOpacity(.2),
+                                ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            " ⚫ National Assembly",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          isNAVoteCasted
+                              ? Chip(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  side: BorderSide.none,
+                                  label: const Text(
+                                    "Voted",
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.green.withOpacity(.2),
+                                )
+                              : Chip(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  side: BorderSide.none,
+                                  label: const Text(
+                                    "Not Voted",
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.red.withOpacity(.2),
+                                ),
+                        ],
+                      ),
                     ],
-                    onTap: (index) {
-                      setState(() {
-                        selectedPageIndex = index;
-                      });
-                      if (index == 0) {
-                        // Navigate to Home.dart
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Home(),
-                          ),
-                        );
-                      } else if (index == 1) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SeeAll(),
-                          ),
-                        );
-                        // Stay on this page (SeeAll.dart)
-                      } else if (index == 2) {
-                        // Navigate to Profile page
-                        // You can replace 'ProfilePage()' with your actual profile page widget
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => UserDashboard(),
-                          ),
-                        );
-                      }
-                    },
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget candidateList() {
-    return AnimatedPositioned(
-      top: position ? 260 : 250,
-      left: 20,
-      right: 20,
-      duration: const Duration(milliseconds: 400),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 400),
-        opacity: opacity,
-        child: AnimatedOpacity(
-          opacity: opacity,
-          duration: const Duration(milliseconds: 300),
-          child: SizedBox(
-            height: 270,
-            width: MediaQuery.of(context).size.width,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  candidateCard("Nitrate", "PMLN", AssetImage('assets/images/team01.jpg')),
-                  candidateCard("Shariq", "PTI", AssetImage('assets/images/ik.jpeg')),
-                  candidateCard("Husnain", "PPL", AssetImage('assets/images/ali.jpeg')),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget candidateCard(String name, String party, AssetImage image) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: SizedBox(
-        height: 120,
-        width: double.infinity,
-        child: Row(
-          children: [
-            const SizedBox(width: 10,),
-            CircleAvatar(
-              radius: 30,
-              backgroundImage: image,
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(width: 10,),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5,),
-                Text(
-                  party,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                )
               ],
             ),
-            const Spacer(),
-            const Icon(Icons.how_to_vote, color: Colors.green,),
-            const SizedBox(width: 20,),
-          ],
+          ),
         ),
       ),
     );
   }
 
-
-  Widget featureButtonsRow() {
-    return AnimatedPositioned(
-      top: position ? 150 : 220,
-      left: 20,
-      right: 20,
-      duration: const Duration(milliseconds: 400),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 400),
-        opacity: opacity,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-
-          children: [
-            featureButton("ONGOING"),
-            featureButton("Governorship"),
-
-          ],
-        ),
+  Container infoWidget(bool isElectionStarted) {
+    final color = isElectionStarted ? Colors.green : Colors.yellow;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      height: 100,
+      decoration: BoxDecoration(
+        color: color.withOpacity(.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      margin: const EdgeInsets.only(left: 20, right: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info,
+            color: color,
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          isElectionStarted
+              ? const Text(
+                  "Elections are live.\nVote for your favorite candidate.",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                )
+              : const Text(
+                  "Elections not started yet.\nStay tuned.",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+        ],
       ),
     );
   }
-
-  Widget featureButton(String label) {
-    bool isSelected = label == selectedFeature;
-
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          selectedFeature = label;
-        });
-        // Implement the specific behavior for each feature button
-      },
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.resolveWith<Color>(
-              (states) {
-            if (states.contains(MaterialState.pressed)) {
-              return Colors.black; // Change color when button is pressed
-            } else if (isSelected) {
-              return Colors.green; // Change color when button is selected
-            } else {
-              return Colors.white; // Default color
-            }
-          },
-        ),
-        elevation: MaterialStateProperty.all<double>(4), // Add shadow
-      ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 16, color: Colors.black), // Text color
-      ),
-
-    );
-  }
-
-
 }

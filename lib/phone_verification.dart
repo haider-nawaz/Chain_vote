@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:lottie/lottie.dart';
-import 'Signup_Page.dart';
+import 'auth/Signup_Page.dart';
 import 'new.dart';
 
 class Phone_Verfication extends StatefulWidget {
@@ -21,6 +21,7 @@ class _Phone_VerficationState extends State<Phone_Verfication> {
     // TODO: implement dispose
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;
@@ -46,7 +47,7 @@ class _Phone_VerficationState extends State<Phone_Verfication> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(left:w*0.05,right: w*0.05),
+              padding: EdgeInsets.only(left: w * 0.05, right: w * 0.05),
               child: SingleChildScrollView(
                 reverse: true,
                 physics: BouncingScrollPhysics(),
@@ -67,8 +68,12 @@ class _Phone_VerficationState extends State<Phone_Verfication> {
                         color: Colors.grey[500],
                       ),
                     ),
-                    SizedBox(height: w*0.07,),
-                    SizedBox(height: w*0.04,),
+                    SizedBox(
+                      height: w * 0.07,
+                    ),
+                    SizedBox(
+                      height: w * 0.04,
+                    ),
                     Container(
                         decoration: BoxDecoration(
                             color: Colors.white,
@@ -80,52 +85,57 @@ class _Phone_VerficationState extends State<Phone_Verfication> {
                                 offset: Offset(1, 1),
                                 color: Colors.grey.withOpacity(0.4),
                               )
-                            ]
-                        ),
+                            ]),
                         child: TextField(
                           controller: phone,
                           decoration: InputDecoration(
                             hintText: "Phone",
-                            prefixIcon: Icon(Icons.phone, color: Colors.green[600]),
+                            prefixIcon:
+                                Icon(Icons.phone, color: Colors.green[600]),
                             focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                                 borderSide: BorderSide(
                                   color: Colors.white,
                                   width: 1.0,
-                                )
-                            ),
+                                )),
                             enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                                 borderSide: BorderSide(
-                                    color: Colors.white,
-                                    width: 1.0
-                                )
-                            ),
+                                    color: Colors.white, width: 1.0)),
                           ),
-                        )
+                        )),
+                    SizedBox(
+                      height: w * 0.07,
                     ),
-                    SizedBox(height: w*0.07,),
                     GestureDetector(
-                      onTap: () async{
+                      onTap: () async {
                         await FirebaseAuth.instance.verifyPhoneNumber(
                           phoneNumber: phone.text,
-                          verificationCompleted: (PhoneAuthCredential credential) async{
-                            await FirebaseAuth.instance.signInWithCredential(credential);
+                          verificationCompleted:
+                              (PhoneAuthCredential credential) async {
+                            await FirebaseAuth.instance
+                                .signInWithCredential(credential);
                           },
                           verificationFailed: (FirebaseAuthException e) {
                             if (e.code == 'invalid-phone-number') {
                               print('The provided phone number is not valid.');
                             }
                           },
-                          codeSent: (String verificationId, int? resendToken) async{
+                          codeSent:
+                              (String verificationId, int? resendToken) async {
                             String smsCode = verificationId;
                             print(verificationId);
                             print(phone.text);
 
-                            Navigator.of(context)
-                                .push(MaterialPageRoute(builder: (context) => Get_Otp(verificationId: verificationId,)));
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => Get_Otp(
+                                      verificationId: verificationId,
+                                    )));
                             // Create a PhoneAuthCredential with the code
-                            PhoneAuthCredential credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
+                            PhoneAuthCredential credential =
+                                PhoneAuthProvider.credential(
+                                    verificationId: verificationId,
+                                    smsCode: smsCode);
                             print(credential);
 
                             // Sign the user in (or link) with the credential
@@ -135,11 +145,11 @@ class _Phone_VerficationState extends State<Phone_Verfication> {
                         );
                       },
                       child: Container(
-                          width: w*0.35,
-                          height: h*0.06,
+                          width: w * 0.35,
+                          height: h * 0.06,
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              color: Colors.green[600],
+                            borderRadius: BorderRadius.circular(25),
+                            color: Colors.green[600],
                           ),
                           child: Center(
                             child: Text(
@@ -150,10 +160,11 @@ class _Phone_VerficationState extends State<Phone_Verfication> {
                                 color: Colors.white,
                               ),
                             ),
-                          )
-                      ),
+                          )),
                     ),
-                    Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom)),
+                    Padding(
+                        padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).viewInsets.bottom)),
                   ],
                 ),
               ),

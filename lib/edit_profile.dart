@@ -1,19 +1,17 @@
-
-import 'package:flutter/gestures.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:first/auth_controller.dart';
 import 'package:flutter/material.dart';
-import 'Login_Page.dart';
 import 'package:get/get.dart';
-import 'auth_controller.dart';
 
-
-class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+class EditProfile extends StatefulWidget {
+  const EditProfile({super.key});
 
   @override
-  _SignupPageState createState() => _SignupPageState();
+  State<EditProfile> createState() => _EditProfileState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _EditProfileState extends State<EditProfile> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final numberController = TextEditingController();
@@ -22,53 +20,87 @@ class _SignupPageState extends State<SignupPage> {
   final lastnameController = TextEditingController();
   final firstnameController = TextEditingController();
 
-  List<String> cniccheck = [
-    "12345",
-    "54321",
-    "24689",
-    // Add more CNIC numbers as needed
-  ];
+  final user = Get.find<AuthController>().currUser.value;
 
+  void prepareEdit() {
+    firstnameController.text = user!.fname!;
+    lastnameController.text = user!.lname!;
+    nationalityController.text = user!.national!;
+    cnicController.text = user!.cnic!;
+    emailController.text = user!.email!;
+    numberController.text = user!.phone!;
+  }
+
+  void clearFields() {
+    firstnameController.clear();
+    lastnameController.clear();
+    nationalityController.clear();
+    cnicController.clear();
+    emailController.clear();
+    numberController.clear();
+  }
+
+  void updateUser() {
+    var user = FirebaseAuth.instance.currentUser;
+    final ref = FirebaseFirestore.instance.collection('Users');
+
+    // Modify this line to include all the registration data
+    ref.doc(user!.uid).set({
+      "first_name": firstnameController.text,
+      "last_name": lastnameController.text,
+      "nationality": nationalityController.text,
+      "cnic": cnicController.text,
+      "email": emailController.text,
+      "phone_num": numberController.text,
+    }).then((value) {
+      Get.snackbar("About Login", "message",
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+          titleText: const Text(
+            "Succcess",
+            style: TextStyle(color: Colors.white),
+          ),
+          messageText: const Text(
+            "User Updated",
+          ));
+      clearFields();
+      Get.find<AuthController>().getCurrentUserDetails();
+    }).catchError((onError) {
+      Get.snackbar("About Login", "message",
+          backgroundColor: Colors.redAccent,
+          snackPosition: SnackPosition.BOTTOM,
+          titleText: const Text(
+            "Login failed",
+            style: TextStyle(color: Colors.white),
+          ),
+          messageText: Text(
+            onError.toString(),
+          ));
+    });
+  }
 
   @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    // TODO: implement dispose
-    super.dispose();
+  void initState() {
+    prepareEdit();
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    List images = ["g.png", "f.png"];
-    double w = MediaQuery.of(context).size.width;
     double h = MediaQuery.of(context).size.height;
-    var _value = "-1";
     return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
-      body: ListView(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 0),
-            width: w * 0.5,
-            height: h * 0.2,
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage("assets/log1.png"), fit: BoxFit.cover)),
-          ),
-          Container(
-            margin: EdgeInsets.only(left: 20, right: 20),
+      appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, color: Colors.greenAccent)),
+          title: const Text("Edit Profile")),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
             child: Column(
-              // crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Register your account",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.grey[500],
-                  ),
-                ),
                 SizedBox(
                   height: h * 0.02,
                 ),
@@ -80,25 +112,25 @@ class _SignupPageState extends State<SignupPage> {
                         BoxShadow(
                           blurRadius: 10,
                           spreadRadius: 7,
-                          offset: Offset(1, 1),
+                          offset: const Offset(1, 1),
                           color: Colors.grey.withOpacity(0.4),
                         )
                       ]),
                   child: TextField(
                     controller: firstnameController,
                     decoration: InputDecoration(
-                      hintText: "Full Name ",
+                      hintText: "First Name ",
                       prefixIcon: Icon(Icons.person, color: Colors.green[600]),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
+                          borderSide: const BorderSide(
                             color: Colors.white,
                             width: 1.0,
                           )),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide:
-                              BorderSide(color: Colors.white, width: 1.0)),
+                          borderSide: const BorderSide(
+                              color: Colors.white, width: 1.0)),
                     ),
                   ),
                 ),
@@ -113,7 +145,7 @@ class _SignupPageState extends State<SignupPage> {
                         BoxShadow(
                           blurRadius: 10,
                           spreadRadius: 7,
-                          offset: Offset(1, 1),
+                          offset: const Offset(1, 1),
                           color: Colors.grey.withOpacity(0.4),
                         )
                       ]),
@@ -124,14 +156,14 @@ class _SignupPageState extends State<SignupPage> {
                       prefixIcon: Icon(Icons.person, color: Colors.green[600]),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
+                          borderSide: const BorderSide(
                             color: Colors.white,
                             width: 1.0,
                           )),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide:
-                              BorderSide(color: Colors.white, width: 1.0)),
+                          borderSide: const BorderSide(
+                              color: Colors.white, width: 1.0)),
                     ),
                   ),
                 ),
@@ -146,7 +178,7 @@ class _SignupPageState extends State<SignupPage> {
                         BoxShadow(
                           blurRadius: 10,
                           spreadRadius: 7,
-                          offset: Offset(1, 1),
+                          offset: const Offset(1, 1),
                           color: Colors.grey.withOpacity(0.4),
                         )
                       ]),
@@ -158,14 +190,14 @@ class _SignupPageState extends State<SignupPage> {
                           Icon(Icons.add_home, color: Colors.green[600]),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
+                          borderSide: const BorderSide(
                             color: Colors.white,
                             width: 1.0,
                           )),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide:
-                              BorderSide(color: Colors.white, width: 1.0)),
+                          borderSide: const BorderSide(
+                              color: Colors.white, width: 1.0)),
                     ),
                   ),
                 ),
@@ -180,7 +212,7 @@ class _SignupPageState extends State<SignupPage> {
                         BoxShadow(
                           blurRadius: 10,
                           spreadRadius: 7,
-                          offset: Offset(1, 1),
+                          offset: const Offset(1, 1),
                           color: Colors.grey.withOpacity(0.4),
                         )
                       ]),
@@ -192,21 +224,20 @@ class _SignupPageState extends State<SignupPage> {
                           Icon(Icons.numbers_sharp, color: Colors.green[600]),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
+                          borderSide: const BorderSide(
                             color: Colors.white,
                             width: 1.0,
                           )),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
-                          borderSide:
-                              BorderSide(color: Colors.white, width: 1.0)),
+                          borderSide: const BorderSide(
+                              color: Colors.white, width: 1.0)),
                     ),
                   ),
                 ),
                 SizedBox(
                   height: h * 0.02,
                 ),
-
                 Container(
                     decoration: BoxDecoration(
                         color: Colors.white,
@@ -215,7 +246,7 @@ class _SignupPageState extends State<SignupPage> {
                           BoxShadow(
                             blurRadius: 10,
                             spreadRadius: 7,
-                            offset: Offset(1, 1),
+                            offset: const Offset(1, 1),
                             color: Colors.grey.withOpacity(0.4),
                           )
                         ]),
@@ -223,24 +254,23 @@ class _SignupPageState extends State<SignupPage> {
                       controller: emailController,
                       decoration: InputDecoration(
                         hintText: "Your Email",
-                        prefixIcon:
-                            Icon(Icons.email_outlined, color: Colors.green[600]),
+                        prefixIcon: Icon(Icons.email_outlined,
+                            color: Colors.green[600]),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: Colors.white,
                               width: 1.0,
                             )),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.0)),
+                            borderSide: const BorderSide(
+                                color: Colors.white, width: 1.0)),
                       ),
                     )),
                 SizedBox(
                   height: h * 0.02,
                 ),
-
                 Container(
                     decoration: BoxDecoration(
                         color: Colors.white,
@@ -249,7 +279,7 @@ class _SignupPageState extends State<SignupPage> {
                           BoxShadow(
                             blurRadius: 10,
                             spreadRadius: 7,
-                            offset: Offset(1, 1),
+                            offset: const Offset(1, 1),
                             color: Colors.grey.withOpacity(0.4),
                           )
                         ]),
@@ -261,152 +291,82 @@ class _SignupPageState extends State<SignupPage> {
                             Icon(Icons.phone_android, color: Colors.green[600]),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: Colors.white,
                               width: 1.0,
                             )),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.0)),
+                            borderSide: const BorderSide(
+                                color: Colors.white, width: 1.0)),
                       ),
                     )),
                 SizedBox(
                   height: h * 0.02,
                 ),
                 Container(
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 10,
-                            spreadRadius: 7,
-                            offset: Offset(1, 1),
-                            color: Colors.grey.withOpacity(0.4),
-                          )
-                        ]),
-                    child: TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: "Password",
-                        prefixIcon:
-                            Icon(Icons.password, color: Colors.green[600]),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
-                              color: Colors.white,
-                              width: 1.0,
-                            )),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.0)),
-                      ),
-                    )),
-                SizedBox(
-                  height: h * 0.02,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 10,
+                          spreadRadius: 7,
+                          offset: const Offset(1, 1),
+                          color: Colors.grey.withOpacity(0.4),
+                        )
+                      ]),
                 ),
+                const SizedBox(
+                  height: 20,
+                ),
+                GestureDetector(
+                  onTap: () {
+                    updateUser();
+                  },
+                  child: Container(
+                      width: 200,
+                      height: 50,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 10,
+                              spreadRadius: 4,
+                              offset: const Offset(1, 1),
+                              color: Colors.grey.withOpacity(0.5),
+                            )
+                          ],
+                          gradient: const LinearGradient(
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                            colors: [
+                              Colors.green,
+                              Colors.green,
+                            ],
+                          )
+                          // image: DecorationImage(
+                          //   image: AssetImage(
+                          //       "img/btn.jpg"
+                          //   ),
+                          //   fit: BoxFit.cover,
+                          // )
+                          ),
+                      child: const Center(
+                        child: Text(
+                          "Update",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )),
+                )
               ],
             ),
           ),
-          SizedBox(
-            height: h * 0.03,
-          ),
-          GestureDetector(
-            onTap: () {
-              if (!cniccheck.contains(cnicController.text)) {
-                print("CNIC not Found");
-                // Display a Snackbar with an error message
-                Get.snackbar(
-                  "About User",
-                  "Invalid CNIC",
-                  backgroundColor: Colors.redAccent,
-                  snackPosition: SnackPosition.BOTTOM,
-                  titleText: Text(
-                    "Account creation failed",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  messageText: Text(
-                    "Invalid CNIC!",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                );
-              } else {
-                // CNIC matches, proceed with registration
-                AuthController.instance.register(
-                  emailController.text.trim(),
-                  passwordController.text.trim(),
-                  firstnameController.text.trim(),
-                  lastnameController.text.trim(),
-                  nationalityController.text.trim(),
-                  numberController.text.trim(),
-                  cnicController.text.trim(),
-                );
-              }
-            },
-            child: Container(
-                margin: EdgeInsets.only(left: 20, right: 20),
-                width: w * 0.1,
-                height: h * 0.09,
-                decoration: BoxDecoration(
-                  color: Colors.green[600],
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Center(
-                  child: Text(
-                    "Sign up",
-                    style: TextStyle(
-                      fontSize: 30,
-                      color: Colors.white,
-                    ),
-                  ),
-                )),
-          ),
-          SizedBox(
-            height: w * 0.01,
-          ),
-          Center(
-            child: RichText(
-                text: TextSpan(
-                    text: "Already have an account?",
-                    style: TextStyle(color: Colors.grey[500], fontSize: 16),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () => Get.to(() => LoginPage()))),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Center(
-            child: RichText(
-                text: TextSpan(
-              text: "Sign up using the following method",
-              style: TextStyle(color: Colors.grey[500], fontSize: 16),
-            )),
-          ),
-          // SizedBox(height: w*0.01,),
-          Center(
-            child: Expanded(
-              child: Wrap(
-                children: List<Widget>.generate(2, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: 30,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 25,
-                        backgroundImage: AssetImage("assets/" + images[index]),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          )
-        ],
+        ),
       ),
     );
   }

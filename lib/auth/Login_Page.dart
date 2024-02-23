@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'Signup_Page.dart';
 import 'package:get/get.dart';
 
-import 'auth_controller.dart';
-import 'forget_password.dart';
-import 'new.dart';
+import '../auth_controller.dart';
+import '../forget_password.dart';
+import '../new.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -30,6 +30,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    Get.put(AuthController());
     double w = MediaQuery.of(context).size.width;
     double h = MediaQuery.of(context).size.height;
 
@@ -41,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
           Container(
             width: w * 0.6,
             height: h * 0.2,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage("assets/log1.png"),
                 fit: BoxFit.cover,
@@ -70,11 +71,10 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   height: h * 0.03,
                 ),
-            SizedBox(
-                height: h * 0.0,
-              ),
-
-            Container(
+                SizedBox(
+                  height: h * 0.0,
+                ),
+                Container(
                     decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(30),
@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                           BoxShadow(
                             blurRadius: 10,
                             spreadRadius: 7,
-                            offset: Offset(1, 1),
+                            offset: const Offset(1, 1),
                             color: Colors.grey.withOpacity(0.4),
                           )
                         ]),
@@ -93,17 +93,17 @@ class _LoginPageState extends State<LoginPage> {
                         prefixIcon: Icon(Icons.email, color: Colors.green[600]),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: Colors.white,
                               width: 1.0,
                             )),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.0)),
+                            borderSide: const BorderSide(
+                                color: Colors.white, width: 1.0)),
                       ),
                     )),
-                SizedBox(
+                const SizedBox(
                   height: 20,
                 ),
                 Container(
@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                           BoxShadow(
                             blurRadius: 10,
                             spreadRadius: 7,
-                            offset: Offset(1, 1),
+                            offset: const Offset(1, 1),
                             color: Colors.grey.withOpacity(0.4),
                           )
                         ]),
@@ -127,17 +127,17 @@ class _LoginPageState extends State<LoginPage> {
                             Icon(Icons.password, color: Colors.green[600]),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
+                            borderSide: const BorderSide(
                               color: Colors.white,
                               width: 1.0,
                             )),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 1.0)),
+                            borderSide: const BorderSide(
+                                color: Colors.white, width: 1.0)),
                       ),
                     )),
-                SizedBox(
+                const SizedBox(
                   height: 5,
                 ),
                 Align(
@@ -150,18 +150,18 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         builder: (context) => Container(
-                          padding: EdgeInsets.all(30),
+                          padding: const EdgeInsets.all(30),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 "Make Selection",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 "Select one of the options given below to reset your password.",
                               ),
                               SizedBox(
@@ -170,10 +170,10 @@ class _LoginPageState extends State<LoginPage> {
                               GestureDetector(
                                 onTap: () {
                                   Navigator.pop(context);
-                                  Get.to(() => ForgetPassword());
+                                  Get.to(() => const ForgetPassword());
                                 },
                                 child: Container(
-                                  padding: EdgeInsets.all(20),
+                                  padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10),
                                     color: Colors.grey.shade200,
@@ -188,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                                       SizedBox(
                                         width: h * 0.01,
                                       ),
-                                      Column(
+                                      const Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
@@ -231,7 +231,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(10),
                       color: Colors.green[600],
                     ),
-                    child: Center(
+                    child: const Center(
                       child: Text(
                         "Sign in",
                         style: TextStyle(
@@ -243,13 +243,13 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: w * 0.01,
+                const SizedBox(
+                  height: 20,
                 ),
                 RichText(
                   text: TextSpan(
                     text: "Don't have an account?",
-                    style: TextStyle(color: Colors.black54, fontSize: 15),
+                    style: const TextStyle(color: Colors.black54, fontSize: 15),
                     children: [
                       TextSpan(
                         text: " Create",
@@ -258,42 +258,14 @@ class _LoginPageState extends State<LoginPage> {
                           fontSize: 15,
                         ),
                         recognizer: TapGestureRecognizer()
-                          ..onTap = () => Get.to(() => SignupPage()),
+                          ..onTap = () => Get.to(() => const SignupPage()),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height:
                       20, // Add some space between the "Sign in" and "Login with Number" buttons
-                ),
-                
-                InkWell(
-                  child: ElevatedButton(
-                
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.green[600],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    onPressed: () { Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => Phone_Verfication()));
-                      
-                     },
-                    child: Container(
-                      width: w * 0.55,
-                      height: h * 0.06,
-                      alignment: Alignment.center,
-                      child: Text(
-                        "Login with Number",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),

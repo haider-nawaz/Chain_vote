@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:lottie/lottie.dart';
-import 'Login_Page.dart';
+import 'auth/Login_Page.dart';
 
 class Create_Password extends StatefulWidget {
   const Create_Password({super.key});
@@ -36,8 +36,8 @@ class _Create_PasswordState extends State<Create_Password> {
               ),
             ),
             SizedBox(
-                    height: h * 0.01,
-                  ),
+              height: h * 0.01,
+            ),
             Container(
               margin: const EdgeInsets.only(left: 20, right: 20),
               child: Column(
