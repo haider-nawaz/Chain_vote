@@ -280,7 +280,7 @@ class _HomeState extends State<Home> {
             );
           } else {
             // Navigate to VotingResults.dart
-            if (!announceResult) {
+            if (isElectionStarted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text(
