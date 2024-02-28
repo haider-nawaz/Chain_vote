@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:first/auth/Login_Page.dart';
 import 'package:first/edit_profile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -295,7 +296,9 @@ class _UserDashboardState extends State<UserDashboard> {
                         color: Colors.red,
                         endIcon: false,
                         onPress: () {
-                          AuthController.instance.logOut();
+                          FirebaseAuth.instance.signOut().then((value) {
+                            Get.offAll(const LoginPage());
+                          });
                         }),
                   ],
                 ),

@@ -4,10 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:first/Models/candidate.dart';
 import 'package:first/auth_controller.dart';
+import 'package:first/display_results.dart';
 import 'package:first/na.dart';
 import 'package:first/na_results_page.dart';
 import 'package:first/user_dash.dart';
 import 'package:first/voting_results.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,6 +54,7 @@ class _HomeState extends State<Home> {
   }
 
   var isElectionStarted = false;
+  var announceResult = false;
   bool applied = false;
 
   String status = "new";
@@ -85,6 +88,7 @@ class _HomeState extends State<Home> {
         .then((value) {
       setState(() {
         isElectionStarted = value.get("start_election");
+        announceResult = value.get("announce_result");
       });
     });
   }
@@ -141,7 +145,51 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // floatingActionButton: Hero(
+      //   tag: "results",
+      //   child: GestureDetector(
+      //     onTap: () {
+      //       Get.to(() => const Displayresults());
+      //     },
+      //     child: Container(
+      //       margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+      //       padding: const EdgeInsets.all(10),
+      //       decoration: BoxDecoration(
+      //         color: Colors.green,
+      //         borderRadius: BorderRadius.circular(50),
+      //       ),
+      //       width: double.infinity,
+      //       height: 45,
+      //       child: const Row(
+      //         mainAxisSize: MainAxisSize.min,
+      //         children: [
+      //           Icon(
+      //             Icons.info,
+      //             color: Colors.white,
+      //           ),
+      //           const SizedBox(
+      //             width: 5,
+      //           ),
+      //           Text(
+      //             "See Election Results",
+      //             style: TextStyle(
+      //               color: Colors.white,
+      //               fontWeight: FontWeight.w500,
+      //               fontSize: 14,
+      //             ),
+      //           ),
+      //           const Spacer(),
+      //           Icon(
+      //             Icons.arrow_forward,
+      //             color: Colors.white,
+      //           )
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      // ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -151,10 +199,19 @@ class _HomeState extends State<Home> {
             icon: Icon(Icons.how_to_vote),
             label: 'Vote',
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle_outlined),
             label: 'Profile',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.document_scanner),
+            label: 'Results',
+          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.stacked_line_chart_outlined),
+          //   label: 'Re',
+          // ),
         ],
         currentIndex: selectedPageIndex,
         selectedItemColor: Colors.green,
@@ -221,6 +278,30 @@ class _HomeState extends State<Home> {
                 builder: (context) => const UserDashboard(),
               ),
             );
+          } else {
+            // Navigate to VotingResults.dart
+            if (!announceResult) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Results not announced yet.",
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Displayresults(
+                    ppData: ppData,
+                  ),
+                ),
+              );
+            }
           }
         },
       ),

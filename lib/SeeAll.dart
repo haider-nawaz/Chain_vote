@@ -35,6 +35,8 @@ class _SeeAllState extends State<SeeAll> {
   bool position = false;
   int selectedPageIndex = 1;
 
+  bool isCandidateSelected = false;
+
   var voteTypes = [
     "PP",
     "NA",
@@ -227,7 +229,11 @@ class _SeeAllState extends State<SeeAll> {
   void initState() {
     selectedNA = finalisedNaNumber['Areas'][0].toString().replaceAll("[", "");
     selectedNACandidate = finalisedNaNumber['Candidates'][0].toString();
-    print("selected NA in init state: $selectedNA");
+
+    print("All candidates: ${finalisedNaNumber['Candidates']}");
+
+    print("selected NA candidate in init state: $selectedNACandidate");
+
     print(
         "final na list: ${finalisedNaNumber['Areas'].toString().split(',').map((e) => e.toString().replaceAll("[", ""))}");
     formatCSVData();
@@ -380,125 +386,171 @@ class _SeeAllState extends State<SeeAll> {
                 ],
               ),
 
-              if (voteTypeSelection == "NA")
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    const Text("NA#"),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: DropdownButton(
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down),
-                        iconSize: 30,
-                        value: selectedNAValue,
-                        onChanged: (newValue) {
-                          setState(() {
-                            selectedNAValue = newValue.toString();
-                            // print(finalisedNaNumber['Areas'][0]);
-                            //selectedNA = finalisedNaNumber['Areas'][0];
-                          });
-                          updateNA(selectedNAValue);
-                        },
-                        items: eligibleNas.map((e) {
-                          return DropdownMenuItem(
-                            value: e,
-                            child: TextWidget(
-                                e, 18, Colors.black, FontWeight.normal),
-                            onTap: () {
+              voteTypeSelection == "NA"
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: 30,
+                        ),
+                        const Text("NA#"),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Container(
+                          // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: DropdownButton(
+                            isExpanded: true,
+                            underline: const SizedBox(),
+                            icon: const Icon(Icons.arrow_drop_down),
+                            iconSize: 30,
+                            value: selectedNAValue,
+                            onChanged: (newValue) {
                               setState(() {
-                                selectedNAValue = e;
+                                selectedNAValue = newValue.toString();
+                                // print(finalisedNaNumber['Areas'][0]);
+                                //selectedNA = finalisedNaNumber['Areas'][0];
                               });
+                              updateNA(selectedNAValue);
                             },
-                          );
-                        }).toList(),
-                      ),
+                            items: eligibleNas.map((e) {
+                              return DropdownMenuItem(
+                                value: e,
+                                child: TextWidget(
+                                    e, 18, Colors.black, FontWeight.normal),
+                                onTap: () {
+                                  setState(() {
+                                    selectedNAValue = e;
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: 30,
+                        ),
+                        const Text("PP#56"),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Container(
+                          // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: DropdownButton(
+                            isExpanded: true,
+                            underline: const SizedBox(),
+                            icon: const Icon(Icons.arrow_drop_down),
+                            iconSize: 30,
+                            value: "PP#56",
+                            onChanged: (newValue) {
+                              setState(() {});
+                            },
+                            items: [
+                              DropdownMenuItem(
+                                value: "PP#56",
+                                child: TextWidget("PP#56", 18, Colors.black,
+                                    FontWeight.normal),
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    const Text("Province"),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: DropdownButton(
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down),
-                        iconSize: 30,
-                        value: "Punjab",
-                        onChanged: (newValue) {
-                          setState(() {});
-                        },
-                        items: [
-                          DropdownMenuItem(
-                            value: "Punjab",
-                            child: TextWidget(
-                                "Punjab", 18, Colors.black, FontWeight.normal),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
 
-              if (voteTypeSelection == "NA")
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 30,
+              //if (voteTypeSelection == "NA")
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const Text("Province"),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey),
                     ),
-                    const Text("City"),
-                    const SizedBox(
-                      height: 10,
+                    child: DropdownButton(
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down),
+                      iconSize: 30,
+                      value: "Punjab",
+                      onChanged: (newValue) {
+                        setState(() {});
+                      },
+                      items: [
+                        DropdownMenuItem(
+                          value: "Punjab",
+                          child: TextWidget(
+                              "Punjab", 18, Colors.black, FontWeight.normal),
+                        )
+                      ],
                     ),
-                    Container(
-                      // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: DropdownButton(
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down),
-                        iconSize: 30,
-                        value: "Gujranwala",
-                        onChanged: (newValue) {
-                          setState(() {});
-                        },
-                        items: [
-                          DropdownMenuItem(
-                            value: "Gujranwala",
-                            child: TextWidget("Gujranwala", 18, Colors.black,
-                                FontWeight.normal),
-                          )
-                        ],
-                      ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const Text("City"),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey),
                     ),
-                  ],
-                ),
+                    child: DropdownButton(
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down),
+                      iconSize: 30,
+                      value: "Gujranwala",
+                      onChanged: (newValue) {
+                        setState(() {});
+                      },
+                      items: [
+                        DropdownMenuItem(
+                          value: "Gujranwala",
+                          child: TextWidget("Gujranwala", 18, Colors.black,
+                              FontWeight.normal),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(
                 height: 30,
               ),
@@ -597,7 +649,22 @@ class _SeeAllState extends State<SeeAll> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Candidates"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Candidates"),
+                      if (voteTypeSelection == "NA")
+                        Chip(
+                          color: MaterialStateProperty.all(Colors.green),
+                          label: Text(
+                            finalisedNaNumber['Party'][
+                                finalisedNaNumber['Candidates']
+                                    .indexOf(selectedNACandidate.trim())],
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(
                     height: 10,
                   ),
@@ -617,17 +684,7 @@ class _SeeAllState extends State<SeeAll> {
                           ? selctedCandidate
                           : selectedNACandidate,
                       onChanged: (newValue) {
-                        // print(finalisedNaNumber['Candidates']
-                        //         .toString()
-                        //         .split(",")
-                        //         .indexOf(newValue!) ??
-                        //     "null");
-
-                        // print(finalisedNaNumber['Party'][
-                        //     finalisedNaNumber['Candidates']
-                        //         .toString()
-                        //         .split(",")
-                        //         .indexOf(newValue!)]);
+                        print("new value in candidate selection:$newValue");
                         setState(() {
                           voteTypeSelection == "PP"
                               ? selctedCandidate = newValue.toString()
@@ -645,9 +702,10 @@ class _SeeAllState extends State<SeeAll> {
                                     FontWeight.normal),
                               );
                             }).toList()
+                          //show the candidate name and party
                           : finalisedNaNumber['Candidates']
                               .toString()
-                              .split(',')
+                              .split(",")
                               .map((e) => e.toString().replaceAll("[", ""))
                               .map((valueItem) {
                               return DropdownMenuItem(
@@ -656,6 +714,17 @@ class _SeeAllState extends State<SeeAll> {
                                     16, Colors.black, FontWeight.normal),
                               );
                             }).toList(),
+                      // : finalisedNaNumber['Candidates']
+                      //     .toString()
+                      //     .split(',')
+                      //     .map((e) => e.toString().replaceAll("[", ""))
+                      //     .map((valueItem) {
+                      //     return DropdownMenuItem(
+                      //       value: valueItem,
+                      //       child: TextWidget(valueItem.replaceAll("}", ""),
+                      //           16, Colors.black, FontWeight.normal),
+                      //     );
+                      //   }).toList(),
                     ),
                   ),
 

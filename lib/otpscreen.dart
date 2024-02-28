@@ -55,36 +55,36 @@ class _OtpScreenState extends State<OtpScreen> {
                 ),
               ),
             ),
-
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                if (verificationID != null && otpcontroller.text != null) {
-                  AuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
-                      verificationId: verificationID!, smsCode: otpcontroller.text!);
+                onPressed: () {
+                  if (verificationID != null && otpcontroller.text != null) {
+                    AuthCredential phoneAuthCredential =
+                        PhoneAuthProvider.credential(
+                            verificationId: verificationID!,
+                            smsCode: otpcontroller.text!);
+                    signin(phoneAuthCredential);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                            'Verification ID or OTP is null. Cannot proceed.')));
+                  }
+
+                  AuthCredential phoneAuthCredential =
+                      PhoneAuthProvider.credential(
+                          verificationId: verificationID,
+                          smsCode: otpcontroller.text);
                   signin(phoneAuthCredential);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Verification ID or OTP is null. Cannot proceed.')));
-                }
-
-                      AuthCredential phoneAuthCredential =
-                          PhoneAuthProvider.credential(
-                              verificationId: verificationID,
-                              smsCode: otpcontroller.text);
-                      signin(phoneAuthCredential);
-                    },
-                    child: Text("Submit"),
-                    style: ElevatedButton.styleFrom(
-                        shape: StadiumBorder(),
-                        primary: Colors.yellow[700],
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 152, vertical: 15),
-                        textStyle: TextStyle(
-                          fontSize: 20,
-                        ))),
-
-
+                },
+                child: Text("Submit"),
+                style: ElevatedButton.styleFrom(
+                    shape: StadiumBorder(),
+                    // primary: Colors.yellow[700],
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 152, vertical: 15),
+                    textStyle: TextStyle(
+                      fontSize: 20,
+                    ))),
             SizedBox(height: 19),
             Text(
               "Haven't recieved OTP?",
@@ -114,7 +114,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
       if (authCred.user != null) {
         // Navigator.pushReplacement(
-            // context, MaterialPageRoute(builder: (context) => basicDetails()));
+        // context, MaterialPageRoute(builder: (context) => basicDetails()));
       }
     } on FirebaseAuthException catch (e) {
       print(e.message);

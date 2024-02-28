@@ -18,15 +18,36 @@ class _VotingResultsState extends State<VotingResults> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              pollWidget(widget.ppData, "PP"),
+              PollWidget(
+                  ppData: widget.ppData,
+                  title: "PP",
+                  displayTopCandidateOnly: false),
             ],
           ),
         ));
   }
+}
 
-  Widget pollWidget(List<Map<String, dynamic>> ppData, String title) {
-    //sort the data by the number of votes
+class PollWidget extends StatelessWidget {
+  const PollWidget({
+    super.key,
+    required this.ppData,
+    required this.title,
+    required this.displayTopCandidateOnly,
+  });
+
+  final List<Map<String, dynamic>> ppData;
+  final String title;
+  final bool displayTopCandidateOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort the data by the number of votes
     ppData.sort((a, b) => b['votes'].compareTo(a['votes']));
+
+    // Determine the number of candidates to display based on the flag
+    int numCandidates = displayTopCandidateOnly ? 1 : ppData.length;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: Container(
@@ -44,9 +65,9 @@ class _VotingResultsState extends State<VotingResults> {
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.bold)),
             ),
-            //loop through the data and display the votes for each candidate
-            //display the name of the candidate, thier party name and the number of votes they have
-            for (var i in ppData)
+            // Loop through the data and display the votes for each candidate
+            // Display the name of the candidate, their party name, and the number of votes they have
+            for (int index = 0; index < numCandidates; index++)
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
@@ -63,7 +84,7 @@ class _VotingResultsState extends State<VotingResults> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                i["party"],
+                                ppData[index]["party"],
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -71,7 +92,7 @@ class _VotingResultsState extends State<VotingResults> {
                                 ),
                               ),
                               Text(
-                                i["name"],
+                                ppData[index]["name"],
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.normal,
@@ -83,21 +104,21 @@ class _VotingResultsState extends State<VotingResults> {
                           Column(
                             children: [
                               Text(
-                                "Position: ${ppData.indexOf(i) + 1}",
+                                "Position: ${index + 1}",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.purple,
                                 ),
                               ),
-                              Text("${i['votes']} Votes"),
+                              Text("${ppData[index]['votes']} Votes"),
                             ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
                       LinearProgressIndicator(
-                        value: i['votes'] / 100,
+                        value: ppData[index]['votes'] / 100,
                         backgroundColor: Colors.green.withOpacity(.2),
                         valueColor:
                             const AlwaysStoppedAnimation<Color>(Colors.green),

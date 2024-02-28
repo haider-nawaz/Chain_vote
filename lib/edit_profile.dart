@@ -45,7 +45,7 @@ class _EditProfileState extends State<EditProfile> {
     final ref = FirebaseFirestore.instance.collection('Users');
 
     // Modify this line to include all the registration data
-    ref.doc(user!.uid).set({
+    ref.doc(user!.uid).update({
       "first_name": firstnameController.text,
       "last_name": lastnameController.text,
       "nationality": nationalityController.text,
