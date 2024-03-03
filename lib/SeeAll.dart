@@ -8,6 +8,7 @@ import 'package:first/user_dash.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Dashborad.dart';
 import '/widgets/text_widget.dart';
@@ -31,6 +32,122 @@ class SeeAll extends StatefulWidget {
 }
 
 class _SeeAllState extends State<SeeAll> {
+  final LocalAuthentication auth = LocalAuthentication();
+  bool? _canCheckBiometrics;
+  List<BiometricType>? _availableBiometrics;
+  _SupportState _supportState = _SupportState.unknown;
+
+  String _authorized = 'Not Authorized';
+  bool _isAuthenticating = false;
+
+  Future<void> _getAvailableBiometrics() async {
+    late List<BiometricType> availableBiometrics;
+    try {
+      availableBiometrics = await auth.getAvailableBiometrics();
+    } on PlatformException catch (e) {
+      availableBiometrics = <BiometricType>[];
+      print(e);
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _availableBiometrics = availableBiometrics;
+    });
+  }
+
+  Future<void> _authenticate() async {
+    bool authenticated = false;
+    try {
+      setState(() {
+        _isAuthenticating = true;
+        _authorized = 'Authenticating';
+      });
+      authenticated = await auth.authenticate(
+        localizedReason: 'Let OS determine authentication method',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+        ),
+      );
+      setState(() {
+        _isAuthenticating = false;
+      });
+    } on PlatformException catch (e) {
+      print(e);
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = 'Error - ${e.message}';
+      });
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(
+        () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
+  }
+
+  Future<void> _authenticateWithBiometrics() async {
+    bool authenticated = false;
+    try {
+      setState(() {
+        _isAuthenticating = true;
+        _authorized = 'Authenticating';
+      });
+      authenticated = await auth.authenticate(
+        localizedReason:
+            'Scan your fingerprint (or face or whatever) to authenticate',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = 'Authenticating';
+      });
+    } on PlatformException catch (e) {
+      print(e);
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = 'Error - ${e.message}';
+      });
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final String message = authenticated ? 'Authorized' : 'Not Authorized';
+    setState(() {
+      _authorized = message;
+    });
+  }
+
+  Future<void> _cancelAuthentication() async {
+    await auth.stopAuthentication();
+    setState(() => _isAuthenticating = false);
+  }
+
+  Future<void> _checkBiometrics() async {
+    late bool canCheckBiometrics;
+    try {
+      canCheckBiometrics = await auth.canCheckBiometrics;
+    } on PlatformException catch (e) {
+      canCheckBiometrics = false;
+      print(e);
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _canCheckBiometrics = canCheckBiometrics;
+    });
+  }
+
   var opacity = 0.0;
   bool position = false;
   int selectedPageIndex = 1;
@@ -206,27 +323,18 @@ class _SeeAllState extends State<SeeAll> {
 
     // Parse the CSV data
     parsedData = await parseCSVData(data);
-
-    // final dataNA = await rootBundle.loadString('assets/NA.csv');
-
-    // Parse the CSV data
-    // parsedNA = await parseNA(dataNA);
-    // print("parsed NA: ${parsedNA}");
-
-    //loop through the parsed data and save it in firestore collection
-    // parsedNA.forEach((key, value) {
-    //   FirebaseFirestore.instance.collection("NA").doc(key).set({
-    //     "name": key,
-    //     "party": value['Party'],
-    //     "votes": 0,
-    //   }).then((value) => null);
-    // });
   }
 
   var selectedNAValue = "NA#79";
 
   @override
   void initState() {
+    auth.isDeviceSupported().then(
+          (bool isSupported) => setState(() => _supportState = isSupported
+              ? _SupportState.supported
+              : _SupportState.unsupported),
+        );
+    _checkBiometrics();
     selectedNA = finalisedNaNumber['Areas'][0].toString().replaceAll("[", "");
     selectedNACandidate = finalisedNaNumber['Candidates'][0].toString();
 
@@ -735,6 +843,8 @@ class _SeeAllState extends State<SeeAll> {
 
                   Center(
                     child: TextButton(
+                      //ask for biometric authentication
+
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: Colors.green,
@@ -743,6 +853,12 @@ class _SeeAllState extends State<SeeAll> {
                             vertical: 15, horizontal: size.width * 0.3),
                       ),
                       onPressed: () async {
+                        if (_canCheckBiometrics == true) {
+                          if (_isAuthenticating == false) {
+                            await _authenticateWithBiometrics();
+                          }
+                        }
+
                         if (widget.votingEnabled == true) {
                           await saveVote();
                         } else {
@@ -765,6 +881,12 @@ class _SeeAllState extends State<SeeAll> {
       ),
     );
   }
+}
+
+enum _SupportState {
+  unknown,
+  supported,
+  unsupported,
 }
 
 List<String> areas = [
