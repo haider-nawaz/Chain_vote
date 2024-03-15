@@ -57,6 +57,8 @@ class _HomeState extends State<Home> {
   var announceResult = false;
   bool applied = false;
 
+  var area = "";
+
   String status = "new";
 
   Future<void> updateKYCStatus() async {
@@ -72,6 +74,8 @@ class _HomeState extends State<Home> {
         .then((value) {
       setState(() {
         status = value.get("status");
+        area = value.get("address");
+        print("area: $area");
       });
     });
   }
@@ -263,6 +267,7 @@ class _HomeState extends State<Home> {
                       votingEnabled: isElectionStarted,
                       isPPVoteCasted: isPPVoteCasted,
                       isNAVoteCasted: isNAVoteCasted,
+                      area: area,
                     ),
                   ),
                 );

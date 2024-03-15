@@ -1,7 +1,9 @@
 import 'package:cnic_scanner/cnic_scanner.dart';
 import 'package:cnic_scanner/model/cnic_model.dart';
+import 'package:first/na.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'Login_Page.dart';
 import 'package:get/get.dart';
@@ -29,6 +31,94 @@ class _SignupPageState extends State<SignupPage> {
     "24689",
     // Add more CNIC numbers as needed
   ];
+
+  var selectedArea = "";
+  var searchText = "";
+
+  void _showAreaSelectionBottomSheet(BuildContext context) {
+    generateDropdownItems();
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            final List<String> filteredAreas = [];
+            if (searchText.isEmpty) {
+              filteredAreas.addAll(areas2);
+            } else {
+              filteredAreas.addAll(
+                areas2.where(
+                  (area) =>
+                      area.toLowerCase().contains(searchText.toLowerCase()),
+                ),
+              );
+            }
+            print("Filtered Areas: $filteredAreas");
+
+            return Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Search',
+                      hintText: 'Search areas',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        searchText = value;
+                      });
+                    },
+                  ),
+                  SizedBox(height: 16.0),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredAreas.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final area = filteredAreas[index];
+                        return ListTile(
+                          title: Text(area),
+                          onTap: () {
+                            Get.find<AuthController>().selectedArea.value =
+                                area;
+                            Navigator.pop(context, area);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<String> areas2 = [];
+
+  void generateDropdownItems() {
+    for (var naData in NADATA) {
+      List<String> areas = naData['Areas'];
+      print(areas);
+      for (var area in areas) {
+        areas2.add(area);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    //generateDropdownItems();
+
+    // Loop through each NA's areas and add them to dropdown items
+
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -79,69 +169,102 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                        onPressed: () async {
-                          // CnicModel _cnicModel = CnicModel();
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Obx(
+                          () => ElevatedButton(
+                            onPressed: () {
+                              _showAreaSelectionBottomSheet(context);
+                            },
+                            child:
+                                Get.find<AuthController>().selectedArea.value ==
+                                        ""
+                                    ? const Text("Select Area")
+                                    : Text(
+                                        Get.find<AuthController>()
+                                            .selectedArea
+                                            .value,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: w * 0.02,
+                        ),
+                        ElevatedButton(
+                            onPressed: () async {
+                              // CnicModel _cnicModel = CnicModel();
 
-                          // final result = await CnicScanner()
-                          //     .scanImage(imageSource: ImageSource.gallery);
+                              // final result = await CnicScanner()
+                              //     .scanImage(imageSource: ImageSource.gallery);
 
-                          // firstnameController.text =
-                          //     result.cnicHolderName.split(" ")[0];
-                          // lastnameController.text =
-                          //     result.cnicHolderName.split(" ")[1];
-                          // cnicController.text = result.cnicNumber;
+                              // firstnameController.text =
+                              //     result.cnicHolderName.split(" ")[0];
+                              // lastnameController.text =
+                              //     result.cnicHolderName.split(" ")[1];
+                              // cnicController.text = result.cnicNumber;
 
-                          //show dialog to select image from gallery or camera
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text("Select Image"),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    ListTile(
-                                      title: const Text("Camera"),
-                                      onTap: () async {
-                                        final result = await CnicScanner()
-                                            .scanImage(
-                                                imageSource:
-                                                    ImageSource.camera);
+                              //show dialog to select image from gallery or camera
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text("Select Image"),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: <Widget>[
+                                        ListTile(
+                                          title: const Text("Camera"),
+                                          onTap: () async {
+                                            final result = await CnicScanner()
+                                                .scanImage(
+                                                    imageSource:
+                                                        ImageSource.camera);
 
-                                        firstnameController.text =
-                                            result.cnicHolderName.split(" ")[0];
-                                        lastnameController.text =
-                                            result.cnicHolderName.split(" ")[1];
-                                        cnicController.text = result.cnicNumber;
+                                            firstnameController.text = result
+                                                .cnicHolderName
+                                                .split(" ")[0];
+                                            lastnameController.text = result
+                                                .cnicHolderName
+                                                .split(" ")[1];
+                                            cnicController.text =
+                                                result.cnicNumber;
 
-                                        Navigator.pop(context);
-                                      },
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                        ListTile(
+                                          title: const Text("Gallery"),
+                                          onTap: () async {
+                                            final result = await CnicScanner()
+                                                .scanImage(
+                                                    imageSource:
+                                                        ImageSource.gallery);
+
+                                            firstnameController.text = result
+                                                .cnicHolderName
+                                                .split(" ")[0];
+                                            lastnameController.text = result
+                                                .cnicHolderName
+                                                .split(" ")[1];
+                                            cnicController.text =
+                                                result.cnicNumber;
+
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                    ListTile(
-                                      title: const Text("Gallery"),
-                                      onTap: () async {
-                                        final result = await CnicScanner()
-                                            .scanImage(
-                                                imageSource:
-                                                    ImageSource.gallery);
-
-                                        firstnameController.text =
-                                            result.cnicHolderName.split(" ")[0];
-                                        lastnameController.text =
-                                            result.cnicHolderName.split(" ")[1];
-                                        cnicController.text = result.cnicNumber;
-
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                        child: const Text("Scan CNIC")),
+                            child: const Text("Scan CNIC")),
+                      ],
+                    ),
                   ),
                   SizedBox(
                     height: h * 0.02,
@@ -315,6 +438,22 @@ class _SignupPageState extends State<SignupPage> {
                   SizedBox(
                     height: h * 0.02,
                   ),
+                  //a drop down button that will show all the areas from NADATA
+                  //type of NADATA is  List<Map<String, dynamic>>
+
+                  // Container(
+                  //   padding: EdgeInsets.symmetric(horizontal: 20),
+                  //   child: DropdownButton(
+                  //     items: generateDropdownItems(),
+                  //     value: selectedArea,
+                  //     onChanged: (value) {
+                  //       setState(() {
+                  //         selectedArea = value.toString();
+                  //       });
+                  //     },
+                  //   ),
+                  // ),
+
                   Container(
                       decoration: BoxDecoration(
                           color: Colors.white,

@@ -21,6 +21,8 @@ class AuthController extends GetxController {
   final auth = FirebaseAuth.instance;
   var verificationId = ''.obs;
 
+  var selectedArea = "".obs;
+
   final cnics = <String>[];
 
   @override
@@ -82,7 +84,8 @@ class AuthController extends GetxController {
         lname.isEmpty ||
         nation.isEmpty ||
         num.isEmpty ||
-        cnic.isEmpty) {
+        cnic.isEmpty ||
+        selectedArea.isEmpty) {
       Get.snackbar("About User", "message",
           backgroundColor: Colors.redAccent,
           snackPosition: SnackPosition.BOTTOM,
@@ -159,6 +162,7 @@ class AuthController extends GetxController {
       'cnic': cnic,
       'email': email,
       'phone_num': num,
+      'address': selectedArea.value,
       "status": "rejected",
       "verified": false,
     }).then((value) async {

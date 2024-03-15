@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:first/auth_controller.dart';
 import 'package:first/na.dart';
 import 'package:first/user_dash.dart';
 import 'package:flutter/material.dart';
@@ -22,11 +23,14 @@ class SeeAll extends StatefulWidget {
   final bool isPPVoteCasted;
   final bool isNAVoteCasted;
 
+  final String area;
+
   const SeeAll(
       {super.key,
       required this.votingEnabled,
       required this.isPPVoteCasted,
-      required this.isNAVoteCasted});
+      required this.isNAVoteCasted,
+      required this.area});
   @override
   State<SeeAll> createState() => _SeeAllState();
 }
@@ -327,6 +331,17 @@ class _SeeAllState extends State<SeeAll> {
 
   var selectedNAValue = "NA#79";
 
+  void findNAFromArea() {
+    //loop throuh nadata and find to whom NA# this area belongs
+    for (var i = 0; i < NADATA.length; i++) {
+      if (NADATA[i]['Areas'].contains(widget.area)) {
+        print("NA# found: ${NADATA[i]['NA']}");
+        selectedNAValue = "NA#${NADATA[i]['NA']}";
+        updateNA(selectedNAValue);
+      }
+    }
+  }
+
   @override
   void initState() {
     auth.isDeviceSupported().then(
@@ -345,6 +360,7 @@ class _SeeAllState extends State<SeeAll> {
     print(
         "final na list: ${finalisedNaNumber['Areas'].toString().split(',').map((e) => e.toString().replaceAll("[", ""))}");
     formatCSVData();
+    findNAFromArea();
     super.initState();
   }
 
@@ -518,14 +534,15 @@ class _SeeAllState extends State<SeeAll> {
                             icon: const Icon(Icons.arrow_drop_down),
                             iconSize: 30,
                             value: selectedNAValue,
-                            onChanged: (newValue) {
-                              setState(() {
-                                selectedNAValue = newValue.toString();
-                                // print(finalisedNaNumber['Areas'][0]);
-                                //selectedNA = finalisedNaNumber['Areas'][0];
-                              });
-                              updateNA(selectedNAValue);
-                            },
+                            onChanged: null,
+                            // onChanged: (newValue) {
+                            //   setState(() {
+                            //     selectedNAValue = newValue.toString();
+                            //     // print(finalisedNaNumber['Areas'][0]);
+                            //     //selectedNA = finalisedNaNumber['Areas'][0];
+                            //   });
+                            //   updateNA(selectedNAValue);
+                            // },
                             items: eligibleNas.map((e) {
                               return DropdownMenuItem(
                                 value: e,
@@ -716,39 +733,53 @@ class _SeeAllState extends State<SeeAll> {
                           ),
                         )
                       : Container(
-                          // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
-                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          padding: const EdgeInsets.all(13),
+                          width: double.infinity,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: Colors.grey),
                           ),
-                          child: DropdownButton(
-                            isExpanded: true,
-                            underline: const SizedBox(),
-                            icon: const Icon(Icons.arrow_drop_down),
-                            iconSize: 30,
-                            value: selectedNA,
-                            onChanged: (newValue) {
-                              setState(() {
-                                selectedNA = newValue.toString();
-                              });
-                            },
-                            items:
-                                //for NA
-                                finalisedNaNumber['Areas']
-                                    .toString()
-                                    .split(',')
-                                    .map(
-                                        (e) => e.toString().replaceAll("[", ""))
-                                    .map((valueItem) {
-                              return DropdownMenuItem(
-                                value: valueItem,
-                                child: TextWidget(valueItem, 16, Colors.black,
-                                    FontWeight.normal),
-                              );
-                            }).toList(),
-                          ),
-                        )
+                          child: Text(widget.area)),
+                  // : Container(
+                  //     // margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                  //     padding: const EdgeInsets.only(left: 10, right: 10),
+                  //     decoration: BoxDecoratio(
+                  //       borderRadius: BorderRadius.circular(10),
+                  //       border: Border.all(color: Colors.grey),
+                  //     ),
+                  //     child: DropdownButton(
+                  //         isExpanded: true,
+                  //         underline: const SizedBox(),
+                  //         icon: const Icon(Icons.arrow_drop_down),
+                  //         iconSize: 30,
+                  //         value:
+                  //             Get.find<AuthController>().selectedArea.value,
+                  //         onChanged: (newValue) {
+                  //           setState(() {
+                  //             selectedNA = newValue.toString();
+                  //           });
+                  //         },
+                  //         items: [
+                  //           DropdownMenuItem(
+                  //               child: Text(Get.find<AuthController>()
+                  //                   .selectedArea
+                  //                   .value))
+                  //         ]
+                  //         //     //for NA
+                  //         //     finalisedNaNumber['Areas']
+                  //         //         .toString()
+                  //         //         .split(',')
+                  //         //         .map(
+                  //         //             (e) => e.toString().replaceAll("[", ""))
+                  //         //         .map((valueItem) {
+                  //         //   return DropdownMenuItem(
+                  //         //     value: valueItem,
+                  //         //     child: TextWidget(valueItem, 16, Colors.black,
+                  //         //         FontWeight.normal),
+                  //         //   );
+                  //         // }).toList(),
+                  //         ),
+                  //   )
                 ],
               ),
               const SizedBox(
